@@ -20,6 +20,26 @@ public class Bb implements Serializable {
     private String question;
     private String reponse;
     private StringBuilder conversation = new StringBuilder();
+    private boolean Debug;
+    private String texteRequeteJson;
+
+    public String getTexteReponseJson() {
+        return texteReponseJson;
+    }
+
+    public void setTexteReponseJson(String texteReponseJson) {
+        this.texteReponseJson = texteReponseJson;
+    }
+
+    public String getTexteRequeteJson() {
+        return texteRequeteJson;
+    }
+
+    public void setTexteRequeteJson(String texteRequeteJson) {
+        this.texteRequeteJson = texteRequeteJson;
+    }
+
+    private String texteReponseJson;
 
     @Inject
     private FacesContext facesContext;
@@ -120,5 +140,16 @@ public class Bb implements Serializable {
         listeSystemRoles.add(new SelectItem(role, "Guide touristique"));
         this.systemRole = (String) listeSystemRoles.get(0).getValue();
         return listeSystemRoles;
+    }
+    public boolean isDebug(){
+        return Debug;
+    }
+
+    public void setDebug(boolean debug){
+        this.Debug=debug;
+    }
+
+    public void toggleDebug() {
+        this.setDebug(!isDebug());
     }
 }

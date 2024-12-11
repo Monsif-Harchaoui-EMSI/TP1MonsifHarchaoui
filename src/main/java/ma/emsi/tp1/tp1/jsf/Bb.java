@@ -5,6 +5,9 @@ import jakarta.faces.model.SelectItem;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import ma.emsi.tp1.tp1.CustomException.RequeteException;
+import ma.emsi.tp1.tp1.llm.JsonUtilPourGemini;
+import ma.emsi.tp1.tp1.records.LlmInteraction;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -22,6 +25,8 @@ public class Bb implements Serializable {
     private StringBuilder conversation = new StringBuilder();
     private boolean Debug;
     private String texteRequeteJson;
+    @Inject
+    private JsonUtilPourGemini jsonUtil;
 
     public String getTexteReponseJson() {
         return texteReponseJson;
@@ -45,6 +50,8 @@ public class Bb implements Serializable {
     private FacesContext facesContext;
 
     public Bb() {
+        // Définir un rôle par défaut
+        this.systemRole = "You are a helpful assistant.";
     }
 
     public String getSystemRole() {
@@ -91,18 +98,25 @@ public class Bb implements Serializable {
             return null;
         }
 
-        // Traitement personnalisé : suppression des voyelles et inversion
-        this.reponse = processQuestion(question);
+        try {
+            LlmInteraction interaction = jsonUtil.envoyerRequete(question);
+            this.reponse = interaction.extractReponse();
+            this.texteRequeteJson = interaction.texteRequeteJson();
+            this.texteReponseJson = interaction.texteReponseJson();
 
-        if (this.conversation.isEmpty()) {
-            this.reponse = systemRole.toUpperCase(Locale.FRENCH) + "\n" + this.reponse;
-            this.systemRoleChangeable = false;
+            if (this.conversation.isEmpty()) {
+                this.reponse = systemRole.toUpperCase(Locale.FRENCH) + "\n" + this.reponse;
+                this.systemRoleChangeable = false;
+            }
+
+            afficherConversation();
+        } catch (RequeteException e) {
+            FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                    "Erreur API Gemini", e.getMessage());
+            facesContext.addMessage(null, message);
         }
-
-        afficherConversation();
         return null;
     }
-
     private String processQuestion(String input) {
         // Supprimer les voyelles
         String noVowels = input.replaceAll("[aeiouAEIOU]", "");
